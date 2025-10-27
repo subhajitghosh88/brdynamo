@@ -7,3 +7,8 @@ Ipython
 langchain_tavily
 openai
 google-genai
+Flask
+flask-cors
+google-generativeai
+python-docx
+PyPDF2
