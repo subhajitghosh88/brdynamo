@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
  * Props:
  *  - uploadUrl (string) default 'http://localhost:8000/upload'
  */
-export default function FileUploader({ uploadUrl = "http://localhost:8000/upload" }) {
+export default function FileUploader({ uploadUrl = "http://localhost:8000/upload", onUploadComplete }) {
   const [files, setFiles] = useState([]); // { file, id, preview, progress, status }
   const inputRef = useRef(null);
 
@@ -80,6 +80,7 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
         console.error("Upload error", err);
       }
     }
+    if (onUploadComplete) onUploadComplete();
   }
 
   return (

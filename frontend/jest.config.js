@@ -1,0 +1,1 @@
+// Jest config removed per user request
