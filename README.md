@@ -19,11 +19,11 @@ BRDynamo is a cutting-edge full-stack prototype designed to transform the way so
 
 We extend our heartfelt gratitude to the following contributors for their invaluable efforts in building BRDynamo:
 
+- [@pallavi-buwa](https://github.com/pallavi-buwa)
+- [@sandeepchandrapati](https://github.com/sandeepchandrapati)
 - [@subhajitghosh88](https://github.com/subhajitghosh88)
 - [@akhileshmorishetty](https://github.com/akhileshmorishetty)
 - [@manojamachavarapudev](https://github.com/manojamachavarapudev)
-- [@pallavi-buwa](https://github.com/pallavi-buwa)
-- [@sandeepchandrapati](https://github.com/sandeepchandrapati)
 - [@sgallenki](https://github.com/sgallenki)
 
 ---
