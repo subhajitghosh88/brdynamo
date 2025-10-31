@@ -5,6 +5,8 @@ import React, { useState, useEffect, useCallback } from "react";
 // It builds a nested tree from the path segments and renders a collapsible nested list.
 export default function FileExplorer({ files = {}, onFileSelect, selected }) {
     const [tree, setTree] = useState(null);
+    // set of opened folder fullPaths
+    const [openSet, setOpenSet] = useState(new Set());
 
     useEffect(() => {
         console.log("FileExplorer received files:", files);
@@ -24,11 +26,12 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
                 node.fullPath = path;
             });
 
-            // convert children maps to arrays recursively
-            const mapToArray = (n) => {
-                const out = { name: n.name, isFile: !!n.isFile, fullPath: n.fullPath, isRoot: !!n.isRoot };
+            // convert children maps to arrays recursively and assign fullPath for every node
+            const mapToArray = (n, prefix = []) => {
+                const currentPath = prefix.length ? prefix.join('/') : '';
+                const out = { name: n.name, isFile: !!n.isFile, fullPath: n.fullPath || currentPath, isRoot: !!n.isRoot };
                 const childrenKeys = Object.keys(n.children || {});
-                out.children = childrenKeys.length ? childrenKeys.map((k) => mapToArray(n.children[k])) : [];
+                out.children = childrenKeys.length ? childrenKeys.map((k) => mapToArray(n.children[k], currentPath ? [...prefix, k] : [k])) : [];
                 return out;
             };
 
@@ -40,25 +43,38 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
         setTree(generated);
     }, [files]);
 
+    // expand to the selected file's ancestors when selected changes
+    useEffect(() => {
+        if (!selected) return;
+        const parts = selected.split('/').filter(Boolean);
+        const acc = [];
+        const newSet = new Set(openSet);
+        for (let i = 0; i < parts.length - 1; i++) {
+            acc.push(parts[i]);
+            newSet.add(acc.join('/'));
+        }
+        setOpenSet(newSet);
+    }, [selected]);
+
     const TreeNode = ({ node, selected }) => {
         const hasChildren = Array.isArray(node.children) && node.children.length > 0;
 
-        const containsSelected = (n) => {
-            if (!n) return false;
-            if (n.fullPath && n.fullPath === selected) return true;
-            if (!n.children || n.children.length === 0) return false;
-            return n.children.some((c) => containsSelected(c));
-        };
+        const isOpen = node.fullPath ? openSet.has(node.fullPath) : false;
 
-        const [open, setOpen] = useState(hasChildren && containsSelected(node));
+        const toggleOpen = () => {
+            const next = new Set(openSet);
+            if (isOpen) next.delete(node.fullPath);
+            else next.add(node.fullPath);
+            setOpenSet(next);
+        };
 
         return (
             <div style={{ marginLeft: node.isRoot ? 0 : 12 }}>
                 {!node.isRoot && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {hasChildren ? (
-                            <button aria-label="toggle" onClick={() => setOpen((v) => !v)} style={{ width: 20, height: 20, padding: 0, border: "none", background: "transparent", cursor: "pointer" }}>
-                                {open ? "▾" : "▸"}
+                            <button aria-label="toggle" onClick={toggleOpen} style={{ width: 20, height: 20, padding: 0, border: "none", background: "transparent", cursor: "pointer" }}>
+                                {isOpen ? "▾" : "▸"}
                             </button>
                         ) : (
                             <span style={{ display: "inline-block", width: 20 }} />
@@ -80,7 +96,7 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
                     </div>
                 )}
 
-                {hasChildren && open && (
+                {hasChildren && isOpen && (
                     <div style={{ marginLeft: 8 }}>
                         {node.children.map((c) => (
                             <TreeNode key={c.fullPath || c.name} node={c} selected={selected} />
@@ -95,11 +111,33 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
         return <div style={{ color: "#666", textAlign: "center" }}>No files available to display.</div>;
     }
 
+    const expandAll = () => {
+        const all = new Set();
+        const walk = (n, prefix = []) => {
+            const fp = n.fullPath || prefix.join('/');
+            if (n.children && n.children.length) {
+                if (fp) all.add(fp);
+                n.children.forEach((c) => walk(c, fp ? fp.split('/') : [...prefix, n.name]));
+            }
+        };
+        tree.children.forEach((c) => walk(c, []));
+        setOpenSet(all);
+    };
+
+    const collapseAll = () => setOpenSet(new Set());
+
     return (
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 12, maxHeight: 520, overflowY: "auto" }}>
-            {tree.children.map((child) => (
-                <TreeNode key={child.fullPath || child.name} node={child} selected={selected} />
-            ))}
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 8 }}>
+                <button onClick={expandAll} className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200">Expand all</button>
+                <button onClick={collapseAll} className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200">Collapse all</button>
+            </div>
+
+            <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 12, maxHeight: 520, overflowY: "auto" }}>
+                {tree.children.map((child) => (
+                    <TreeNode key={child.fullPath || child.name} node={child} selected={selected} />
+                ))}
+            </div>
         </div>
     );
 }
