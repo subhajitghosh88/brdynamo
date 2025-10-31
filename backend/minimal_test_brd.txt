@@ -1,0 +1,19 @@
+Project Name: Minimal BRD for brdynamo
+Objective: Simple products API for testing backend generator
+
+Data Model:
+- Entity: Product
+  - id: uuid (primary)
+  - name: string
+  - price: number
+  - stock: integer
+
+Functional Requirements:
+- FR-001: List products (GET /api/products)
+- FR-002: Get product by id (GET /api/products/{id})
+- FR-003: Create product (POST /api/products)
+- FR-004: Update product (PUT /api/products/{id})
+- FR-005: Delete product (DELETE /api/products/{id})
+
+Non-Functional Requirements:
+- Use PostgreSQL, standard REST conventions, and sensible validation for inputs.
