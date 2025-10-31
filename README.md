@@ -76,8 +76,6 @@ Open the frontend address shown by Vite (usually http://localhost:5173) and the 
 
 ## Screenshots
 
-Thanks — the screenshots have been added to the repository. Below are the embedded screenshots that demonstrate the main UI and the backend Swagger page.
-
 ### Screenshots gallery (step-by-step)
 
 Below is a step-by-step visual guide to the BRDynamo application. Each screenshot is grouped by functionality and includes a short caption.
