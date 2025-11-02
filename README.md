@@ -53,6 +53,22 @@ This repository contains a small full-stack prototype that accepts a BRD (Busine
 
 ## How to run (local)
 
+### Prerequisites
+
+Before running the backend, you'll need to set up your environment variables:
+
+1. **Create a `.env` file** in the `backend/` directory
+2. **Get your Gemini API Key** from [Google AI Studio](https://aistudio.google.com/api-keys)
+3. **Add the API key** to your `.env` file:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+> **Note**: The `.env` file is not checked into git for security reasons. Make sure to keep your API key confidential and never commit it to version control.
+
+### Backend Setup
+
 Backend (PowerShell example):
 
 ```powershell
