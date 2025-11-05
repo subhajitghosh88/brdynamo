@@ -2,19 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* small custom styles */
+/* Enhanced base styles */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Flash highlight for newly shown section */
+/* Enhanced flash highlight animation */
 @keyframes flash-bg {
-  0% { background-color: rgba(250, 250, 210, 0.95); }
-  60% { background-color: rgba(250, 250, 210, 0.5); }
+  0% { background-color: rgba(59, 130, 246, 0.1); }
+  50% { background-color: rgba(59, 130, 246, 0.05); }
   100% { background-color: transparent; }
 }
 
 .flash-highlight {
   animation: flash-bg 1s ease-in-out;
+  border-radius: 1rem;
+}
+
+/* Enhanced hover effects */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  70% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.pulse-on-hover:hover {
+  animation: pulse-glow 0.6s ease-in-out;
+}
+
+/* Enhanced loading spinner */
+@keyframes enhanced-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.enhanced-spinner {
+  animation: enhanced-spin 1s linear infinite;
+}
+
+/* Card hover effects */
+.enhanced-card {
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.enhanced-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced button animations */
+.enhanced-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enhanced-button:hover {
+  transform: translateY(-1px);
+}
+
+.enhanced-button:active {
+  transform: translateY(0);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced focus styles */
+.enhanced-focus:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: rgb(59 130 246);
+  ring-opacity: 0.5;
 }

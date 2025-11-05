@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
-// Simple dependency-free file explorer. It accepts a flat object `files` where keys
-// are file paths (e.g. "src/main/java/com/example/Foo.java") and values are file contents.
-// It builds a nested tree from the path segments and renders a collapsible nested list.
+// Enhanced file explorer with modern styling
 export default function FileExplorer({ files = {}, onFileSelect, selected }) {
     const [tree, setTree] = useState(null);
     // set of opened folder fullPaths
     const [openSet, setOpenSet] = useState(new Set());
+    const [isBuilding, setIsBuilding] = useState(false);
 
     useEffect(() => {
         console.log("FileExplorer received files:", files);
+        console.log("Number of files:", Object.keys(files || {}).length);
+        console.log("File paths:", Object.keys(files || {}));
+        
+        setIsBuilding(true);
+        
         const buildFromPaths = (filesObj) => {
             const root = { name: "", children: {}, isRoot: true };
 
@@ -40,7 +44,13 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
 
         const generated = buildFromPaths(files);
         console.log("Generated explorer tree:", generated);
+        console.log("Tree children count:", generated?.children?.length || 0);
+        console.log("Tree structure sample:", generated?.children?.slice(0, 3));
+        if (!generated?.children || generated.children.length === 0) {
+            console.error("Tree building produced no children! Input files:", Object.keys(files || {}));
+        }
         setTree(generated);
+        setIsBuilding(false);
     }, [files]);
 
     // expand to the selected file's ancestors when selected changes
@@ -56,10 +66,35 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
         setOpenSet(newSet);
     }, [selected]);
 
+    const getFileIcon = (fileName) => {
+        if (!fileName) return "📁";
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        const iconMap = {
+            'java': '☕',
+            'js': '📄',
+            'jsx': '⚛️',
+            'ts': '📘',
+            'tsx': '📘',
+            'py': '🐍',
+            'html': '🌐',
+            'css': '🎨',
+            'json': '📊',
+            'xml': '📋',
+            'md': '📝',
+            'txt': '📝',
+            'yml': '⚙️',
+            'yaml': '⚙️',
+            'properties': '⚙️',
+            'gradle': '🛠️',
+            'pom': '📦'
+        };
+        return iconMap[ext] || '📄';
+    };
+
     const TreeNode = ({ node, selected }) => {
         const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-
         const isOpen = node.fullPath ? openSet.has(node.fullPath) : false;
+        const isSelected = selected === node.fullPath;
 
         const toggleOpen = () => {
             const next = new Set(openSet);
@@ -69,46 +104,105 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
         };
 
         return (
-            <div style={{ marginLeft: node.isRoot ? 0 : 12 }}>
+            <div className={`${node.isRoot ? '' : 'ml-3'}`}>
                 {!node.isRoot && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="flex items-center group">
                         {hasChildren ? (
-                            <button aria-label="toggle" onClick={toggleOpen} style={{ width: 20, height: 20, padding: 0, border: "none", background: "transparent", cursor: "pointer" }}>
-                                {isOpen ? "▾" : "▸"}
+                            <button 
+                                onClick={toggleOpen}
+                                className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-all duration-150"
+                                aria-label="Toggle folder"
+                            >
+                                <svg 
+                                    className={`w-3 h-3 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} 
+                                    fill="currentColor" 
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                </svg>
                             </button>
                         ) : (
-                            <span style={{ display: "inline-block", width: 20 }} />
+                            <div className="w-5 h-5"></div>
                         )}
+                        
                         <div
                             onClick={() => {
-                                if (node.isFile && node.fullPath) onFileSelect && onFileSelect(node.fullPath);
+                                if (node.isFile && node.fullPath) {
+                                    onFileSelect && onFileSelect(node.fullPath);
+                                }
                             }}
-                            style={{
-                                cursor: node.isFile ? "pointer" : "default",
-                                color: node.isFile ? "#0ea5e9" : "#111",
-                                backgroundColor: node.fullPath === selected ? "#fff7b2" : "transparent",
-                                padding: node.fullPath === selected ? "2px 6px" : undefined,
-                                borderRadius: node.fullPath === selected ? 4 : undefined,
-                            }}
+                            className={`flex items-center gap-2 py-1 px-2 rounded-md cursor-pointer transition-all duration-150 min-w-0 ${
+                                isSelected 
+                                    ? 'bg-yellow-100 text-yellow-800 border-l-2 border-yellow-400 shadow-sm' 
+                                    : node.isFile 
+                                        ? 'hover:bg-blue-50 text-gray-700 hover:text-gray-900' 
+                                        : 'text-gray-600 hover:text-gray-800 font-medium'
+                            } ${node.isFile ? 'cursor-pointer' : 'cursor-default'}`}
                         >
-                            {node.name}
+                            <span className="mr-1 text-sm flex-shrink-0">
+                                {node.isFile ? getFileIcon(node.name) : "📁"}
+                            </span>
+                            <span className="whitespace-nowrap">{node.name}</span>
                         </div>
                     </div>
                 )}
 
                 {hasChildren && isOpen && (
                     <div style={{ marginLeft: 8 }}>
-                        {node.children.map((c) => (
-                            <TreeNode key={c.fullPath || c.name} node={c} selected={selected} />
-                        ))}
+                        {node.children
+                            .sort((a, b) => {
+                                // Folders first, then files
+                                if (!a.isFile && b.isFile) return -1;
+                                if (a.isFile && !b.isFile) return 1;
+                                // Then alphabetical within same type
+                                return a.name.localeCompare(b.name);
+                            })
+                            .map((c) => (
+                                <TreeNode key={c.fullPath || c.name} node={c} selected={selected} />
+                            ))}
                     </div>
                 )}
             </div>
         );
     };
 
+    if (isBuilding) {
+        return (
+            <div className="flex items-center justify-center py-8 text-gray-500">
+                <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full mr-3"></div>
+                Building file tree...
+            </div>
+        );
+    }
+
     if (!tree || !tree.children || tree.children.length === 0) {
-        return <div style={{ color: "#666", textAlign: "center" }}>No files available to display.</div>;
+        const fileCount = Object.keys(files || {}).length;
+        if (fileCount > 0) {
+            console.error("Tree building failed but files exist:", files);
+            return (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="text-red-800 font-semibold mb-2">⚠️ Tree building failed!</div>
+                    <div className="text-red-700 text-sm mb-3">Files received: {fileCount}</div>
+                    <div className="bg-white rounded border max-h-48 overflow-y-auto">
+                        {Object.keys(files).map(path => (
+                            <div 
+                                key={path} 
+                                onClick={() => onFileSelect && onFileSelect(path)} 
+                                className="px-3 py-2 text-sm border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                            >
+                                📄 {path}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+        return (
+            <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                <div className="text-3xl mb-2">📂</div>
+                <p className="text-sm">No files available to display</p>
+            </div>
+        );
     }
 
     const expandAll = () => {
@@ -128,15 +222,39 @@ export default function FileExplorer({ files = {}, onFileSelect, selected }) {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 8 }}>
-                <button onClick={expandAll} className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200">Expand all</button>
-                <button onClick={collapseAll} className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200">Collapse all</button>
+            {/* Controls */}
+            <div className="flex justify-end gap-2 mb-3">
+                <button 
+                    onClick={expandAll} 
+                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 transition-colors duration-150"
+                    title="Expand all folders"
+                >
+                    Expand All
+                </button>
+                <button 
+                    onClick={collapseAll} 
+                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 transition-colors duration-150"
+                    title="Collapse all folders"
+                >
+                    Collapse All
+                </button>
             </div>
 
-            <div style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: 12, maxHeight: 520, overflowY: "auto" }}>
-                {tree.children.map((child) => (
-                    <TreeNode key={child.fullPath || child.name} node={child} selected={selected} />
-                ))}
+            {/* File tree with horizontal scroll */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[32rem]">
+                <div className="min-w-max">
+                    {tree.children
+                        .sort((a, b) => {
+                            // Folders first, then files
+                            if (!a.isFile && b.isFile) return -1;
+                            if (a.isFile && !b.isFile) return 1;
+                            // Then alphabetical within same type
+                            return a.name.localeCompare(b.name);
+                        })
+                        .map((child) => (
+                            <TreeNode key={child.fullPath || child.name} node={child} selected={selected} />
+                        ))}
+                </div>
             </div>
         </div>
     );

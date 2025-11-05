@@ -23,9 +23,12 @@ CORS(app)
 # Use flasgger's lazy JSON encoder so Swagger can resolve host dynamically
 app.json_encoder = LazyJSONEncoder
 
-UPLOAD_FOLDER = "uploads"
-PARSED_FOLDER = "parsed_json"
-GENERATED_CODE_FOLDER = "generated_code"
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+UPLOAD_FOLDER = os.path.join(SCRIPT_DIR, "uploads")
+PARSED_FOLDER = os.path.join(SCRIPT_DIR, "parsed_json")
+GENERATED_CODE_FOLDER = os.path.join(SCRIPT_DIR, "generated_code")
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PARSED_FOLDER, exist_ok=True)
@@ -235,6 +238,10 @@ def upload_file():
             return jsonify({"error": "No file selected"}), 400
 
         filepath = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
+        
+        # Ensure upload directory exists before saving
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
         file.save(filepath)
 
         print(f"File saved at: {filepath}")
@@ -345,12 +352,28 @@ def get_generated_code():
         if os.path.exists(package_zip):
             zip_path = package_zip
         else:
-            # Create a zip from the generated folder
+            # Create a zip from the generated folder, excluding zip files
             zip_path = os.path.join(GENERATED_CODE_FOLDER, 'generated_code_temp.zip')
             import shutil
             if os.path.exists(zip_path):
                 os.remove(zip_path)
-            shutil.make_archive(zip_path[:-4], 'zip', GENERATED_CODE_FOLDER)
+            
+            # Find the project folder (any directory that's not hidden)
+            project_folders = [d for d in os.listdir(GENERATED_CODE_FOLDER) 
+                             if os.path.isdir(os.path.join(GENERATED_CODE_FOLDER, d)) 
+                             and not d.startswith('.')]
+            
+            if project_folders:
+                # Zip only the project folder, not the entire generated_code folder
+                project_path = os.path.join(GENERATED_CODE_FOLDER, project_folders[0])
+                print(f"Creating zip from project folder: {project_path}")
+                shutil.make_archive(zip_path[:-4], 'zip', project_path)
+            else:
+                print("No project folder found, creating empty zip")
+                # Create empty zip if no project folder exists
+                import zipfile
+                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                    pass
 
         return send_file(
             zip_path,
@@ -363,6 +386,182 @@ def get_generated_code():
         print("ERROR OCCURRED")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/diagrams', methods=['GET'])
+def get_diagrams():
+    """Return all generated architecture diagrams.
+    ---
+    tags:
+      - Diagrams
+    responses:
+      200:
+        description: Successfully retrieved diagrams
+        schema:
+          type: object
+          properties:
+            diagrams:
+              type: object
+              description: Map of diagram paths to their content/metadata
+            summary:
+              type: object
+              properties:
+                total_diagrams:
+                  type: integer
+                puml_files:
+                  type: integer
+                svg_files:
+                  type: integer
+                png_files:
+                  type: integer
+      500:
+        description: Server error
+    """
+    try:
+        diagrams = {}
+        summary = {
+            "total_diagrams": 0,
+            "puml_files": 0,
+            "svg_files": 0,
+            "png_files": 0
+        }
+        
+        # Look for diagram files in generated projects
+        for root, dirs, files in os.walk(GENERATED_CODE_FOLDER):
+            normalized_root = root.replace('\\', '/')
+            
+            for fname in files:
+                if 'docs/diagrams' in normalized_root:
+                    full_path = os.path.join(root, fname)
+                    rel_path = os.path.relpath(full_path, GENERATED_CODE_FOLDER).replace('\\', '/')
+                    
+                    try:
+                        if fname.endswith('.puml'):
+                            # PlantUML source files
+                            with open(full_path, 'r', encoding='utf-8') as f:
+                                diagrams[rel_path] = {
+                                    "type": "plantuml",
+                                    "content": f.read(),
+                                    "format": "text"
+                                }
+                            summary["puml_files"] += 1
+                        elif fname.endswith('.svg'):
+                            # SVG files
+                            with open(full_path, 'r', encoding='utf-8') as f:
+                                diagrams[rel_path] = {
+                                    "type": "svg",
+                                    "content": f.read(),
+                                    "format": "svg"
+                                }
+                            summary["svg_files"] += 1
+                        elif fname.endswith('.png'):
+                            # PNG files (base64 encoded)
+                            import base64
+                            with open(full_path, 'rb') as f:
+                                diagrams[rel_path] = {
+                                    "type": "png",
+                                    "content": base64.b64encode(f.read()).decode('ascii'),
+                                    "format": "base64"
+                                }
+                            summary["png_files"] += 1
+                        elif fname == 'README.md':
+                            # README files
+                            with open(full_path, 'r', encoding='utf-8') as f:
+                                diagrams[rel_path] = {
+                                    "type": "markdown",
+                                    "content": f.read(),
+                                    "format": "text"
+                                }
+                    except Exception as e:
+                        print(f"Error reading diagram file {rel_path}: {e}")
+                        diagrams[rel_path] = {
+                            "type": "error",
+                            "content": f"Error reading file: {str(e)}",
+                            "format": "text"
+                        }
+                    
+                    summary["total_diagrams"] += 1
+        
+        return jsonify({
+            "diagrams": diagrams,
+            "summary": summary
+        })
+        
+    except Exception as e:
+        print('ERROR listing diagrams', e)
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/jira-stories', methods=['GET'])
+def get_jira_stories():
+    """Return all generated JIRA stories and project management files.
+    ---
+    tags:
+      - JIRA
+    responses:
+      200:
+        description: Successfully retrieved JIRA stories
+        schema:
+          type: object
+          properties:
+            files:
+              type: object
+              description: Map of file names to their content
+            summary:
+              type: object
+              properties:
+                total_files:
+                  type: integer
+                project_name:
+                  type: string
+      500:
+        description: Server error
+    """
+    try:
+        files = {}
+        summary = {
+            "total_files": 0,
+            "project_name": None
+        }
+        
+        # Look for project-management files in generated projects
+        for root, dirs, filenames in os.walk(GENERATED_CODE_FOLDER):
+            normalized_root = root.replace('\\', '/')
+            
+            # Check if this is a project-management folder
+            if 'project-management' in normalized_root:
+                # Extract project name from path
+                if not summary["project_name"]:
+                    parts = normalized_root.split('/')
+                    for i, part in enumerate(parts):
+                        if part == 'generated_code' and i + 1 < len(parts):
+                            summary["project_name"] = parts[i + 1]
+                            break
+                
+                for fname in filenames:
+                    if fname.endswith(('.md', '.csv', '.txt')):
+                        full_path = os.path.join(root, fname)
+                        
+                        try:
+                            with open(full_path, 'r', encoding='utf-8') as f:
+                                files[fname] = f.read()
+                            summary["total_files"] += 1
+                        except Exception as file_error:
+                            print(f'Error reading {full_path}: {file_error}')
+                            continue
+        
+        return jsonify({
+            "files": files,
+            "summary": summary
+        })
+        
+    except Exception as e:
+        print('ERROR listing JIRA stories', e)
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 # ------------------------------
 # ENTRY POINT
 # ------------------------------
