@@ -10,14 +10,39 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
   const inputRef = useRef(null);
 
   function handleFiles(selectedFiles) {
-    const arr = Array.from(selectedFiles).map((f) => ({
-      file: f,
-      id: `${f.name}-${f.size}-${f.lastModified}`,
-      preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : null,
-      progress: 0,
-      status: "ready",
-    }));
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/pdf', // .pdf
+      'text/plain' // .txt
+    ];
+    
+    const allowedExtensions = ['.docx', '.pdf', '.txt'];
+    
+    const arr = Array.from(selectedFiles)
+      .filter((f) => {
+        const extension = '.' + f.name.split('.').pop().toLowerCase();
+        const isValidType = allowedTypes.includes(f.type) || allowedExtensions.includes(extension);
+        
+        if (!isValidType) {
+          alert(`File "${f.name}" is not supported. Please upload DOCX, PDF, or TXT files only.`);
+          return false;
+        }
+        return true;
+      })
+      .map((f) => ({
+        file: f,
+        id: `${f.name}-${f.size}-${f.lastModified}`,
+        preview: f.type.startsWith("image/") ? URL.createObjectURL(f) : null,
+        progress: 0,
+        status: "ready",
+      }));
+    
     setFiles((prev) => [...prev, ...arr]);
+    
+    // Clear the input value to allow selecting the same file again
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
   }
 
   function onDrop(e) {
@@ -31,10 +56,19 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
 
   function removeFile(id) {
     setFiles((prev) => prev.filter((f) => f.id !== id));
+    
+    // Clear the input value to ensure same file can be selected again
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
   }
 
   function openFileDialog() {
-    inputRef.current?.click();
+    // Clear the input value before opening to ensure same file can be selected
+    if (inputRef.current) {
+      inputRef.current.value = '';
+      inputRef.current.click();
+    }
   }
 
   async function uploadSingle(fileObj) {
@@ -98,13 +132,18 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
           onKeyDown={(e) => e.key === "Enter" && openFileDialog()}
           className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-slate-300 transition"
         >
-          <input ref={inputRef} type="file" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+          <input 
+            ref={inputRef} 
+            type="file" 
+            multiple 
+            className="hidden" 
+            accept=".docx,.pdf,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain"
+            onChange={(e) => handleFiles(e.target.files)} 
+          />
           <div className="flex flex-col items-center justify-center space-y-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-            </svg>
-            <div className="text-sm text-slate-600">Drop files here or click to browse</div>
-            <div className="text-xs text-slate-400">Supported: any — server will validate size & type</div>
+            <div className="text-4xl text-slate-400">📄</div>
+            <div className="text-sm text-slate-600">Drop Business Requirement Documents here or click to browse</div>
+            <div className="text-xs text-slate-400">Supported formats: DOCX, PDF, TXT</div>
           </div>
         </div>
 
@@ -112,9 +151,20 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
           {files.length === 0 ? (
             <div className="text-sm text-slate-500">No files selected yet.</div>
           ) : (
-            files.map((f) => (
-              <motion.div key={f.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-slate-50 rounded-lg p-3 flex items-center gap-4">
-                {f.preview ? <img src={f.preview} alt={f.file.name} className="w-16 h-16 object-cover rounded-md" /> : <div className="w-16 h-16 rounded-md bg-slate-100 flex items-center justify-center text-slate-400 text-xs">{f.file.type || "FILE"}</div>}
+            files.map((f) => {
+              const getFileIcon = (fileName, fileType) => {
+                const extension = fileName.split('.').pop().toLowerCase();
+                if (extension === 'pdf' || fileType === 'application/pdf') return '📄';
+                if (extension === 'docx' || fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return '📝';
+                if (extension === 'txt' || fileType === 'text/plain') return '📄';
+                return '📄';
+              };
+
+              return (
+                <motion.div key={f.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-slate-50 rounded-lg p-3 flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-md bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 flex items-center justify-center text-2xl">
+                    {getFileIcon(f.file.name, f.file.type)}
+                  </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{f.file.name}</div>
@@ -133,23 +183,24 @@ export default function FileUploader({ uploadUrl = "http://localhost:8000/upload
                   <button onClick={() => removeFile(f.id)} className="text-xs px-3 py-1 rounded bg-slate-100 hover:bg-slate-200">Remove</button>
                 </div>
               </motion.div>
-            ))
+              );
+            })
           )}
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => inputRef.current?.click()} className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200">
-              Add files
-            </button>
-            <button onClick={uploadAll} className="px-4 py-2 rounded-lg bg-sky-600 text-white hover:opacity-95">
-              Upload
-            </button>
-          </div>
-
-          <div className="text-sm text-slate-500">
-            Server: <span className="font-mono">{uploadUrl}</span>
-          </div>
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button 
+            onClick={() => inputRef.current?.click()} 
+            className="px-6 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-all duration-200 flex items-center gap-2 border border-slate-200 hover:border-slate-300"
+          >
+            📁 Add Files
+          </button>
+          <button 
+            onClick={uploadAll} 
+            className="px-8 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+          >
+            🚀 Upload & Generate
+          </button>
         </div>
       </motion.div>
     </div>
