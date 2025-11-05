@@ -253,8 +253,20 @@ def upload_file():
             parsed_data = json.load(f)
 
         # Generate code based on parsed BRD
+        print("=== STARTING CODE GENERATION ===")
         generated_files = code_generator.generate_code_from_brd(parsed_data)
+        print(f"=== CODE GENERATION COMPLETE. FILES GENERATED: {len(generated_files)} ===")
+        
+        if not generated_files:
+            print("WARNING: No files were generated!")
+        else:
+            print("Generated files:")
+            for file_path in sorted(generated_files.keys()):
+                content_length = len(generated_files[file_path])
+                print(f"  - {file_path} ({content_length} chars)")
+        
         code_generator.save_generated_code(generated_files)
+        print("=== FILES SAVED TO DISK ===")
 
         return jsonify({
             "message": "File processed and code generated successfully",
@@ -347,10 +359,15 @@ def get_generated_code():
         description: Server error
     """
     try:
+        print("=== /generated-code ENDPOINT CALLED ===")
         # Prefer the zip produced by the generator
         package_zip = os.path.join(GENERATED_CODE_FOLDER, 'generated_package.zip')
+        print(f"Looking for generated_package.zip at: {package_zip}")
+        print(f"generated_package.zip exists: {os.path.exists(package_zip)}")
+        
         if os.path.exists(package_zip):
             zip_path = package_zip
+            print(f"Using existing generated_package.zip")
         else:
             # Create a zip from the generated folder, excluding zip files
             zip_path = os.path.join(GENERATED_CODE_FOLDER, 'generated_code_temp.zip')
@@ -367,7 +384,32 @@ def get_generated_code():
                 # Zip only the project folder, not the entire generated_code folder
                 project_path = os.path.join(GENERATED_CODE_FOLDER, project_folders[0])
                 print(f"Creating zip from project folder: {project_path}")
-                shutil.make_archive(zip_path[:-4], 'zip', project_path)
+                
+                # Check if the project folder actually contains files
+                has_files = False
+                file_count = 0
+                for root, dirs, files in os.walk(project_path):
+                    if files:
+                        has_files = True
+                        file_count += len(files)
+                
+                if has_files:
+                    # Create zip with the project folder as the root, preserving folder structure
+                    print(f"Creating temp zip with {file_count} files using shutil.make_archive")
+                    shutil.make_archive(zip_path[:-4], 'zip', GENERATED_CODE_FOLDER, project_folders[0])
+                    
+                    # Verify creation
+                    if os.path.exists(zip_path):
+                        zip_size = os.path.getsize(zip_path)
+                        print(f"Temp zip created successfully: {zip_path} (size: {zip_size} bytes)")
+                    else:
+                        print(f"ERROR: Temp zip was not created")
+                else:
+                    print("Project folder exists but contains no files")
+                    # Create empty zip if project folder has no files
+                    import zipfile
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        pass
             else:
                 print("No project folder found, creating empty zip")
                 # Create empty zip if no project folder exists

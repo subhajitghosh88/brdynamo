@@ -1321,11 +1321,23 @@ Example markdown for embedding:
 
     def save_generated_code(self, generated_files: Dict) -> None:
         """Save generated code to output directory."""
+        project_folders = []
+        
         for file_path, content in generated_files.items():
             try:
                 full_path = os.path.join(self.output_dir, file_path)
                 os.makedirs(os.path.dirname(full_path), exist_ok=True)
                 with open(full_path, "w") as f:
                     f.write(content)
+                
+                # Track project folders (first level directories)
+                parts = file_path.split(os.sep)
+                if len(parts) > 0 and parts[0] not in project_folders:
+                    project_folders.append(parts[0])
+                    
             except Exception as e:
                 print(f"Error saving file {file_path}: {str(e)}")
+        
+        # Note: Zip file creation is handled by the download endpoint
+
+
