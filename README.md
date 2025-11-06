@@ -27,6 +27,7 @@ BRDynamo is a cutting-edge full-stack prototype designed to transform the way so
 
 ### 🛠 **Technical Excellence**
 - **Downloadable Output**: Download generated code as ZIP file for easy integration
+- **Architecture Diagrams**: Auto-generated system architecture, database ER, and API flow diagrams using [Kroki.io](https://kroki.io/)
 - **Swagger API Integration**: Comprehensive API documentation for seamless backend interaction
 - **Error Handling**: Robust error handling and user feedback throughout the application
 - **File Type Validation**: Smart file type detection supporting DOCX, PDF, and TXT formats
@@ -172,60 +173,38 @@ npm run dev
 
 Open the frontend address shown by Vite (usually http://localhost:5173) and the backend if required at http://localhost:8000 (or the port in your backend config).
 
-## Screenshots
+### 🔗 API Documentation
 
-### Screenshots gallery (step-by-step)
+BRDynamo includes comprehensive API documentation through Swagger UI:
 
-Below is a step-by-step visual guide to the BRDynamo application. Each screenshot is grouped by functionality and includes a short caption.
+- **Swagger UI Interface**: Access at `http://localhost:8000/` when the backend is running
+- **Interactive API Testing**: Test all endpoints directly through the Swagger interface
+- **Complete Documentation**: Detailed parameter descriptions, response schemas, and example requests
+- **Real-time Validation**: Live API validation and response testing
 
-#### Landing Page
-![Landing Page](docs/screenshots/screenshot_1.png)
+![Swagger UI](docs/screenshots/swagger-ui.png)
 
-#### Upload Process
-![Upload Page](docs/screenshots/screenshot_2.png)
-![Upload Progress](docs/screenshots/screenshot_3.png)
+## 📸 Screenshots
 
-#### Code Generation
-![Code Generation Status](docs/screenshots/screenshot_4.png)
-![Generated Files Tree](docs/screenshots/screenshot_5.png)
+### Application Walkthrough
 
-#### File Explorer and Code Viewer
-![File Explorer](docs/screenshots/screenshot_6.png)
-![Code Viewer - Java File](docs/screenshots/screenshot_7.png)
+Experience BRDynamo's complete workflow from BRD upload to code generation and project management.
 
-#### Download Flow
-![Download ZIP](docs/screenshots/screenshot_8.png)
+#### 🚀 Main Application Interface
+![BRDynamo Application](docs/screenshots/screenshot_1.png)
 
-#### Uplaod Endpoint
-![Upload Endpoint](docs/screenshots/screenshot_9.png)
-![Generated Files Endpoint](docs/screenshots/screenshot_10.png)
+#### �️ Swagger API Documentation
+![Swagger UI Interface](docs/screenshots/swagger-ui.png)
 
-#### Swagger Landing Page
-![Screenshot 32](docs/screenshots/swagger-ui.png)
+### 📂 Complete Screenshot Gallery
 
-#### Additional Screenshots
+The complete collection of **40+ detailed screenshots** showcasing every feature and workflow is available in the [`docs/screenshots/`](docs/screenshots/) directory. These include:
 
-- ![Screenshot 11](docs/screenshots/screenshot_11.png)
-- ![Screenshot 12](docs/screenshots/screenshot_12.png)
-- ![Screenshot 13](docs/screenshots/screenshot_13.png)
-- ![Screenshot 14](docs/screenshots/screenshot_14.png)
-- ![Screenshot 15](docs/screenshots/screenshot_15.png)
-- ![Screenshot 16](docs/screenshots/screenshot_16.png)
-- ![Screenshot 17](docs/screenshots/screenshot_17.png)
-- ![Screenshot 18](docs/screenshots/screenshot_18.png)
-- ![Screenshot 19](docs/screenshots/screenshot_19.png)
-- ![Screenshot 20](docs/screenshots/screenshot_20.png)
-- ![Screenshot 21](docs/screenshots/screenshot_21.png)
-- ![Screenshot 22](docs/screenshots/screenshot_22.png)
-- ![Screenshot 23](docs/screenshots/screenshot_23.png)
-- ![Screenshot 24](docs/screenshots/screenshot_24.png)
-- ![Screenshot 25](docs/screenshots/screenshot_25.png)
-- ![Screenshot 26](docs/screenshots/screenshot_26.png)
-- ![Screenshot 27](docs/screenshots/screenshot_27.png)
-- ![Screenshot 28](docs/screenshots/screenshot_28.png)
-- ![Screenshot 29](docs/screenshots/screenshot_29.png)
-- ![Screenshot 30](docs/screenshots/screenshot_30.png)
-- ![Screenshot 31](docs/screenshots/screenshot_31.png)
+- **User Interface Variations**: Different views and states across all application screens
+- **Feature Deep Dives**: Detailed walkthroughs of advanced functionality
+- **API Documentation**: Complete Swagger UI interface and endpoint details
+
+> 🔗 **View All Screenshots**: Browse the complete gallery at [`docs/screenshots/`](docs/screenshots/) for detailed visual documentation of every feature and workflow.
 
 ---
 
