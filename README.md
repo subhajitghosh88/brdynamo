@@ -177,7 +177,7 @@ Open the frontend address shown by Vite (usually http://localhost:5173) and the 
 
 BRDynamo includes comprehensive API documentation through Swagger UI:
 
-- **Swagger UI Interface**: Access at `http://localhost:8000/` when the backend is running
+- **Swagger UI Interface**: Access at `http://localhost:8000/apidocs/` when the backend is running
 - **Interactive API Testing**: Test all endpoints directly through the Swagger interface
 - **Complete Documentation**: Detailed parameter descriptions, response schemas, and example requests
 - **Real-time Validation**: Live API validation and response testing
@@ -193,9 +193,6 @@ Experience BRDynamo's complete workflow from BRD upload to code generation and p
 #### 🚀 Landing Page Interface
 ![BRDynamo Landing Page](docs/screenshots/screenshot_40.png)
 ![BRDynamo Application Flow](docs/screenshots/screenshot_41.png)
-
-#### 🛠️ Swagger API Documentation
-![Swagger UI Interface](docs/screenshots/swagger-ui.png)
 
 ### 📂 Complete Screenshot Gallery
 
