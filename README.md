@@ -190,10 +190,11 @@ BRDynamo includes comprehensive API documentation through Swagger UI:
 
 Experience BRDynamo's complete workflow from BRD upload to code generation and project management.
 
-#### 🚀 Main Application Interface
-![BRDynamo Application](docs/screenshots/screenshot_1.png)
+#### 🚀 Landing Page Interface
+![BRDynamo Landing Page](docs/screenshots/screenshot_40.png)
+![BRDynamo Application Flow](docs/screenshots/screenshot_41.png)
 
-#### �️ Swagger API Documentation
+#### 🛠️ Swagger API Documentation
 ![Swagger UI Interface](docs/screenshots/swagger-ui.png)
 
 ### 📂 Complete Screenshot Gallery
